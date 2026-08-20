@@ -1,5 +1,5 @@
 {
-    "name": "foziluff/swagger-generator",
+    "name": "foziluff/swagger",
     "description": "Auto-generate OpenAPI/Swagger 3.0 specs from Laravel Routes & Request classes",
     "type": "library",
     "license": "MIT",
