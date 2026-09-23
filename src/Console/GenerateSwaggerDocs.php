@@ -297,7 +297,7 @@ PHP;
                 $requiredFields[] = $field;
             }
 
-            $prop = ['type' => $type];
+            $prop = $this->typeToSchema($type);
 
             if (in_array('nullable', $parsed)) {
                 $prop['nullable'] = true;
@@ -307,7 +307,7 @@ PHP;
                 $prop['enum'] = $enum;
             }
             if ($type === 'boolean') {
-                $prop['enum'] = [0, 1];
+                $prop['enum'] = ['0', '1', 'true', 'false'];
             }
 
             foreach ($parsed as $rulePart) {
@@ -316,31 +316,31 @@ PHP;
                 }
                 if (Str::startsWith($rulePart, 'min:')) {
                     $value = (int) Str::after($rulePart, 'min:');
-                    if ($type === 'string') {
-                        $prop['minLength'] = $value;
-                    } elseif (in_array($type, ['integer', 'number'])) {
+                    if (in_array($type, ['integer', 'number'])) {
                         $prop['minimum'] = $value;
+                    } else {
+                        $prop['minLength'] = $value;
                     }
                 }
 
                 if (Str::startsWith($rulePart, 'max:')) {
                     $value = (int) Str::after($rulePart, 'max:');
-                    if ($type === 'string') {
-                        $prop['maxLength'] = $value;
-                    } elseif (in_array($type, ['integer', 'number'])) {
+                    if (in_array($type, ['integer', 'number'])) {
                         $prop['maximum'] = $value;
+                    } else {
+                        $prop['maxLength'] = $value;
                     }
                 }
 
                 if (Str::startsWith($rulePart, 'between:')) {
                     [$min, $max] = str($rulePart)->after('between:')->explode(',')->map(fn ($v) => (int) $v);
 
-                    if ($type === 'string') {
-                        $prop['minLength'] = $min;
-                        $prop['maxLength'] = $max;
-                    } elseif (in_array($type, ['integer', 'number'])) {
+                    if (in_array($type, ['integer', 'number'])) {
                         $prop['minimum'] = $min;
                         $prop['maximum'] = $max;
+                    } else {
+                        $prop['minLength'] = $min;
+                        $prop['maxLength'] = $max;
                     }
                 }
             }
@@ -508,6 +508,16 @@ PHP;
         }
 
         return 'string';
+    }
+
+    protected function typeToSchema(string $type): array
+    {
+        return match ($type) {
+            'integer' => ['type' => 'string', 'format' => 'integer'],
+            'number'  => ['type' => 'string', 'format' => 'float'],
+            'boolean' => ['type' => 'string', 'format' => 'boolean'],
+            default   => ['type' => $type],
+        };
     }
 
     /**
