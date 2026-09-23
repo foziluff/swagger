@@ -175,7 +175,12 @@ class GenerateSwaggerDocs extends Command
     SwaggerUIBundle({
         url: '/api-docs.json',
         dom_id: "#swagger-ui",
-        docExpansion: "none"
+        docExpansion: "none",
+        requestInterceptor: function(request) {
+            delete request.headers['accept'];
+            request.headers['Accept'] = 'application/json';
+            return request;
+        }
     });
 </script>
 </body>
@@ -663,7 +668,20 @@ PHP;
             ];
         }
 
-        return count($codes) > 0 ? $codes : ['200' => ['description' => 'OK']];
+        if (! isset($codes['200'])) {
+            $codes['200'] = [
+                'description' => 'OK',
+                'content' => [
+                    'application/json' => [
+                        'schema' => [
+                            'type' => 'object',
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        return $codes;
     }
 
     /**
